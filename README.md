@@ -25,6 +25,8 @@
         - query ( float latitude, float longitude, unsigned int StationaryMask)
       - Asset with a specific IP address.
         - query ( string IP )
+      - List all SKUs
+      - List all regions
 - # Test
   - The python script create_asset_csv.py creates a csv file of N assets with n random SKUs, random coordinates, 90% of the assetts are not stationary, and random IP addresses.
   - The python script test_asset_csv.py reads in the CSV, tests a query on the SKU, checks the csv file for any oddities that will break the simple C++ parser, checks for unique IP addresses, and implements a rapid prototype of the database retrieval system

@@ -239,6 +239,7 @@ int main(){
     std::unordered_map<std::string,bool> unique_SKUs;
     std::vector<struct assetDbManager::AssetCoordinates> Assets;
     assetDbManager assetDb("assetDb.csv");
+    std::cout << "Database Initialized" << std::endl;
     //assetDb.AllSKUs(unique_SKUs,assetDbManager::ALL, assetDbManager::PRINT);
     //assetDb.AllRegions(UniqueRegions,assetDbManager::ALL,assetDbManager::PRINT);
     //assetDb.AllSKUsRegion(unique_SKUs,22,108,assetDbManager::ALL, assetDbManager::PRINT);

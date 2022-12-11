@@ -2,9 +2,9 @@
 import random
 import string
 
-trackers = 100 
-SKUs = 4
-regions = 20
+trackers = 1000000
+SKUs = 4000
+regions = 1000 
 region_list = []
 SKU_list = []
 SKU_size = 12
