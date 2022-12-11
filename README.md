@@ -63,7 +63,8 @@ example: ./run_test.py -assets 100000 -skus 2000 -regions 500 -stationary .9
     PERF: Average time to query 10000 SKUs 64 microseconds
     PERF: Average time to query 1966 Regions 9 microseconds
     PERF: Average time to query 100 IP addresses 1.08 microseconds
-- # Improvements
+- # Improvements to make
+  - Break the progcode ram into header/code files as opposed to a single cpp file and add more comments.
   - Use a standard database like postgress/mySQL
   - Performance : encode a unique sub-node index and SKU index into the lower 64-bits of the IPv6 address.  This would reduce the time to generate a hash, reduce collissions, and eliminate the need for nested tables.  The cost would for when the SKU or node would change for a given transmitter we would need to also make a change to the IP address.
   - Thread the IP address search to look through all of the SKUs in parallel.
