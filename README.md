@@ -2,22 +2,22 @@
   - type make.  This will compile assetDb and run a test with a small ( 100 asset) database
   - when building it runs the test using run_test.py, here is the syntax
 
-./run_test.py --help
-usage: run_test.py [-h] [-assets ASSETS] [-skus SKUS] [-stationary STATIONARY]
-                   [-regions REGIONS]
-
-assetDb query profile test tool
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -assets ASSETS        Total number of assets to generate
-  -skus SKUS            Total number of SKUs
-  -stationary STATIONARY
-                        0-100, percentage of stationary assets
-  -regions REGIONS      Total number of regions to generate
-
-
-example: ./run_test.py -assets 100000 -skus 2000 -regions 500 -stationary .9
+    >./run_test.py --help
+    >usage: run_test.py [-h] [-assets ASSETS] [-skus SKUS] [-stationary STATIONARY]
+    >                   [-regions REGIONS]
+    >
+    >assetDb query profile test tool
+    >
+    >optional arguments:
+    >  -h, --help            show this help message and exit
+    >  -assets ASSETS        Total number of assets to generate
+    >  -skus SKUS            Total number of SKUs
+    > -stationary STATIONARY
+    >                        0-100, percentage of stationary assets
+    >  -regions REGIONS      Total number of regions to generate
+    >
+    >
+    >example: ./run_test.py -assets 100000 -skus 2000 -regions 500 -stationary .9
 
 # Assumptions
   - Asset tracking is global with global coordinates
