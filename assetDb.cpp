@@ -5,13 +5,13 @@
 #include <vector>
 class assetDbManager {
     public:
-        struct AssetCoordinates {
+        typedef struct AssetCoordinates {
             float Longitude;
             float Latitude;
             int Stationary;
             std::string SKU;
             std::string IP;
-        };
+        } ASSET_COORDINATES;
         enum Stationary {STATIONARY, NOT_STATIONARY, ALL};
         enum Print {PRINT,DONT_PRINT};
         assetDbManager(std::string csvfile){
@@ -216,6 +216,14 @@ class assetDbManager {
                 }
             }
         }
+        ASSET_COORDINATES KeyToCoordinates (unsigned int coords){
+            union PackedCoordinates Coords;
+            ASSET_COORDINATES ReturnAsset;
+            Coords.coords_key = coords;
+            ReturnAsset.Latitude = Coords.coords.Latitude;
+            ReturnAsset.Longitude = Coords.coords.Longitude;
+            return ReturnAsset;
+        }
     private:
         typedef std::unordered_map<std::string, 
             std::unordered_map<unsigned int,
@@ -235,17 +243,24 @@ class assetDbManager {
 };
 int main(){
     std::filebuf assetDbcsv;
-    std::unordered_map<unsigned int,bool> UniqueRegions;
-    std::unordered_map<std::string,bool> unique_SKUs;
+    std::unordered_map<unsigned int,bool> Regions;
+    std::unordered_map<std::string,bool> UniqueSKUs;
     std::vector<struct assetDbManager::AssetCoordinates> Assets;
     assetDbManager assetDb("assetDb.csv");
     std::cout << "Database Initialized" << std::endl;
+    while(1) {
+        ;
+    }
+    //assetDb.AllSKUs(UniqueSKUs,assetDbManager::ALL, assetDbManager::DONT_PRINT);
+    //std::cout << "Unique SKUS: " << UniqueSKUs.size() << std::endl;
+    //assetDb.AllRegions(Regions,assetDbManager::ALL,assetDbManager::DONT_PRINT);
+    //std::cout << "Unique Regions: " << Regions.size() << std::endl;
     //assetDb.AllSKUs(unique_SKUs,assetDbManager::ALL, assetDbManager::PRINT);
     //assetDb.AllRegions(UniqueRegions,assetDbManager::ALL,assetDbManager::PRINT);
     //assetDb.AllSKUsRegion(unique_SKUs,22,108,assetDbManager::ALL, assetDbManager::PRINT);
     //assetDb.QueryAssets(Assets,22.0,108.0,assetDbManager::ALL, assetDbManager::PRINT);
     //assetDb.QueryAssets(Assets,"VA9TDG7ES9H7",22,108,assetDbManager::ALL, assetDbManager::PRINT);
-    assetDb.QueryAssets(Assets,"VA9TDG7ES9H7",assetDbManager::ALL, assetDbManager::PRINT);
+    //assetDb.QueryAssets(Assets,"VA9TDG7ES9H7",assetDbManager::ALL, assetDbManager::PRINT);
     //assetDb.QueryAssets(Assets,"35378190207497538290640158540254",assetDbManager::PRINT);
     //assetDb.QueryAssets(Assets,"35378190207497538290640158540254",assetDbManager::PRINT);
     return 0;

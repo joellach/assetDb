@@ -15,6 +15,7 @@ with open(asset_file, newline='') as asset_csv_file:
             exit(1)
         else:
             asset_db[asset[1]][asset[0]] = asset[2:]
+exit(0)
 # print the list of IPs in each SKU
 for SKU in asset_db:
     print("SKU: "+SKU)
