@@ -50,19 +50,19 @@ example: ./run_test.py -assets 100000 -skus 2000 -regions 500 -stationary .9
       - List all regions
 - # Results - measured on a basic laptop
 ## Database with 100,000 assets
-./run_test.py -assets 100000 -skus 10000 -regions 2000
-Creating an assetDb.csv file with 100000 assets,  10000  SKUs,  2000  regions
-    90 % of assets will be stationary
-PERF: Average time to query 10000 SKUs 6 microseconds
-PERF: Average time to query 1961 Regions 83 microseconds
-PERF: Average time to query 100 IP addresses 0.84 microseconds
+    ./run_test.py -assets 100000 -skus 10000 -regions 2000
+    Creating an assetDb.csv file with 100000 assets,  10000  SKUs,  2000  regions
+        90 % of assets will be stationary
+    PERF: Average time to query 10000 SKUs 6 microseconds
+    PERF: Average time to query 1961 Regions 83 microseconds
+    PERF: Average time to query 100 IP addresses 0.84 microseconds
 ## Database with 1,000,000 assets
-./run_test.py -assets 1000000 -skus 10000 -regions 2000
-Creating an assetDb.csv file with 1000000 assets,  10000  SKUs,  2000  regions
-    90 % of assets will be stationary
-PERF: Average time to query 10000 SKUs 64 microseconds
-PERF: Average time to query 1966 Regions 9 microseconds
-PERF: Average time to query 100 IP addresses 1.08 microseconds
+    ./run_test.py -assets 1000000 -skus 10000 -regions 2000
+    Creating an assetDb.csv file with 1000000 assets,  10000  SKUs,  2000  regions
+        90 % of assets will be stationary
+    PERF: Average time to query 10000 SKUs 64 microseconds
+    PERF: Average time to query 1966 Regions 9 microseconds
+    PERF: Average time to query 100 IP addresses 1.08 microseconds
 - # Improvements
   - Use a standard database like postgress/mySQL
   - Performance : encode a unique sub-node index and SKU index into the lower 64-bits of the IPv6 address.  This would reduce the time to generate a hash, reduce collissions, and eliminate the need for nested tables.  The cost would for when the SKU or node would change for a given transmitter we would need to also make a change to the IP address.
@@ -73,3 +73,4 @@ PERF: Average time to query 100 IP addresses 1.08 microseconds
   - Pass queried records by reference rather than copy into a vector
   - More testing on all of the functions
   - Create another fast lookup layout where the Region is the first key and then the SKU to speed up regional retrievals
+  - add a more generic interface that looks more like a database query
