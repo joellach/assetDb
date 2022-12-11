@@ -5,8 +5,7 @@ TARGET = assetDb
 all: $(TARGET) test
 
 test: 
-	./create_asset_csv.py
-	./test_asset_csv.py
+	./run_test.py
 clean:
 	rm ./assetDb assetDb.csv
 

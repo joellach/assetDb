@@ -3,6 +3,8 @@
 #include <unordered_map>
 #include <sstream>
 #include <vector>
+#include <chrono>
+using namespace std::chrono;
 class assetDbManager {
     public:
         typedef struct AssetCoordinates {
@@ -48,18 +50,19 @@ class assetDbManager {
             union PackedCoordinates PackedCoords;
             PackedCoords.coords.Latitude = (signed short) Latitude;
             PackedCoords.coords.Longitude = (signed short) Longitude;
-            auto y = [](ASSETDB &assetDb, std::string IP, std::string SKU, float Longitude, 
+            auto y = [](ASSETDB &assetDb, FASTIP & FastIP, std::string IP, std::string SKU, float Longitude, 
                         float Latitude, int Stationary, union PackedCoordinates PackedCoords ){
                 assetDb[SKU][PackedCoords.coords_key][IP].Latitude = Latitude;
                 assetDb[SKU][PackedCoords.coords_key][IP].Longitude = Longitude;
                 assetDb[SKU][PackedCoords.coords_key][IP].SKU = SKU;
                 assetDb[SKU][PackedCoords.coords_key][IP].IP = IP;
                 assetDb[SKU][PackedCoords.coords_key][IP].Stationary = Stationary;
+                FastIP[IP] = assetDb[SKU][PackedCoords.coords_key][IP];
             };
-            y(((Stationary) ? assetDbStationary : assetDbNotStationary),IP,SKU,Longitude,Latitude,Stationary,PackedCoords);
+            y(((Stationary) ? assetDbStationary : assetDbNotStationary),FastIP,IP,SKU,Longitude,Latitude,Stationary,PackedCoords);
         }
         // Returns all assetts with a SKU
-        void QueryAssets (std::vector<struct AssetCoordinates> Assets,std::string SKU, Stationary TransitState, enum Print print){
+        void QueryAssets (std::vector<struct AssetCoordinates> & Assets,std::string SKU, Stationary TransitState, enum Print print){
             auto y = [](ASSETDB &assetDb, std::vector<struct AssetCoordinates> &Assets, std::string SKU,
                         Stationary TransitState, Stationary Transit){
                 if ( TransitState == ALL or TransitState == Transit ) {
@@ -83,18 +86,8 @@ class assetDbManager {
         }
         // Returns the assett with the IP
         void QueryAssets (std::vector<struct AssetCoordinates> Assets,std::string IP, enum Print print){
-            auto y = [] (ASSETDB &assetDb, std::vector<struct AssetCoordinates> &Assets, std::string IP){
-                for (auto &sku: assetDb){
-                    for( auto &regions: assetDb[sku.first]){
-                        if (assetDb[sku.first][regions.first].find(IP) != 
-                            assetDb[sku.first][regions.first].end()){
-                            Assets.push_back(assetDb[sku.first][regions.first][IP]);
-                        }
-                    }
-                }
-            };
-            y(assetDbStationary, Assets,IP);
-            y(assetDbNotStationary, Assets,IP);
+            Assets.clear();
+            Assets.push_back(FastIP[IP]);
             if ( print == PRINT){
                 for(auto &ip: Assets){
                     std::cout << ip.IP << std::endl;
@@ -132,6 +125,7 @@ class assetDbManager {
         // Returns all assets in this region
         void QueryAssets (std::vector<struct AssetCoordinates> & Assets,float Latitude, float Longitude, 
                             enum Stationary TransitState, enum Print print){
+            Assets.clear();
             union PackedCoordinates Coords;
             Coords.coords.Latitude = (signed short) Latitude;
             Coords.coords.Longitude = (signed short) Longitude;
@@ -139,6 +133,7 @@ class assetDbManager {
                         enum Stationary TransitState, enum Stationary Transit){
                 if ( TransitState == ALL or TransitState == Transit ) {
                     for (auto &sku : assetDb) { 
+                        if ( Assets.size() > 0){break;}
                         if (assetDb[sku.first].find(Coords.coords_key) != 
                             assetDb[sku.first].end()){
                             for (auto &asset : assetDb[sku.first][Coords.coords_key]) { 
@@ -229,6 +224,7 @@ class assetDbManager {
             std::unordered_map<unsigned int,
                 std::unordered_map<std::string,
                         struct AssetCoordinates > > > ASSETDB;
+        typedef std::unordered_map<std::string, ASSET_COORDINATES> FASTIP;
         struct ShortCoordinates {
             signed short Longitude;
             signed short Latitude;
@@ -240,28 +236,84 @@ class assetDbManager {
         // Hash table for assets that are stationary
         ASSETDB assetDbStationary;
         ASSETDB assetDbNotStationary;
+        FASTIP FastIP;
 };
 int main(){
     std::filebuf assetDbcsv;
     std::unordered_map<unsigned int,bool> Regions;
     std::unordered_map<std::string,bool> UniqueSKUs;
     std::vector<struct assetDbManager::AssetCoordinates> Assets;
+    auto start = high_resolution_clock::now();
     assetDbManager assetDb("assetDb.csv");
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
     std::cout << "Database Initialized" << std::endl;
-    while(1) {
-        ;
+    std::cout << "PERF: Initialization time " << duration.count() << " microseconds" <<std::endl;
+    start = high_resolution_clock::now();
+    assetDb.AllSKUs(UniqueSKUs,assetDbManager::ALL, assetDbManager::DONT_PRINT);
+    stop = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(stop - start);
+    std::cout << "Unique SKUS: " << UniqueSKUs.size() << std::endl;
+    std::cout << "PERF: Time to query unique SKUs " << duration.count() << " microseconds" <<std::endl;
+    start = high_resolution_clock::now();
+    assetDb.AllRegions(Regions,assetDbManager::ALL,assetDbManager::DONT_PRINT);
+    stop = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(stop - start);
+    std::cout << "Unique Regions: " << Regions.size() << std::endl;
+    std::cout << "PERF: Time to query all regions " << duration.count() << " microseconds" <<std::endl;
+
+    /* Profile the time it takes to access the assets of each SKU then compute the average*/
+    start = high_resolution_clock::now();
+    int total_records = 0;
+    for (auto &sku: UniqueSKUs){
+        assetDb.QueryAssets(Assets,sku.first,assetDbManager::ALL, assetDbManager::DONT_PRINT);
+        total_records += Assets.size();
+        Assets.clear();
     }
-    //assetDb.AllSKUs(UniqueSKUs,assetDbManager::ALL, assetDbManager::DONT_PRINT);
-    //std::cout << "Unique SKUS: " << UniqueSKUs.size() << std::endl;
-    //assetDb.AllRegions(Regions,assetDbManager::ALL,assetDbManager::DONT_PRINT);
-    //std::cout << "Unique Regions: " << Regions.size() << std::endl;
-    //assetDb.AllSKUs(unique_SKUs,assetDbManager::ALL, assetDbManager::PRINT);
-    //assetDb.AllRegions(UniqueRegions,assetDbManager::ALL,assetDbManager::PRINT);
-    //assetDb.AllSKUsRegion(unique_SKUs,22,108,assetDbManager::ALL, assetDbManager::PRINT);
-    //assetDb.QueryAssets(Assets,22.0,108.0,assetDbManager::ALL, assetDbManager::PRINT);
-    //assetDb.QueryAssets(Assets,"VA9TDG7ES9H7",22,108,assetDbManager::ALL, assetDbManager::PRINT);
-    //assetDb.QueryAssets(Assets,"VA9TDG7ES9H7",assetDbManager::ALL, assetDbManager::PRINT);
-    //assetDb.QueryAssets(Assets,"35378190207497538290640158540254",assetDbManager::PRINT);
-    //assetDb.QueryAssets(Assets,"35378190207497538290640158540254",assetDbManager::PRINT);
+    stop = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(stop - start);
+    std::cout << "PERF: Average time to query " << UniqueSKUs.size() << " SKUs " 
+                << (duration.count() / UniqueSKUs.size()) << " microseconds" <<std::endl;
+    std::cout << "   Total records found " << total_records << std::endl;
+
+    /* Profile the time it takes to access assets of each region then compute the average*/
+    assetDbManager::ASSET_COORDINATES coords;
+    start = high_resolution_clock::now();
+    total_records = 0;
+    for (auto &region_coords: Regions){
+        coords = assetDb.KeyToCoordinates(region_coords.first);
+        assetDb.QueryAssets(Assets,coords.Latitude,coords.Longitude,assetDbManager::ALL, assetDbManager::DONT_PRINT);
+        total_records += Assets.size();
+        Assets.clear();
+    }
+    stop = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(stop - start);
+    std::cout << "PERF: Average time to query " << Regions.size() << " Regions " 
+                << (duration.count() / Regions.size()) << " microseconds" <<std::endl;
+    std::cout << "   Total records found " << total_records << std::endl;
+    /* Profile the time it takes to access individual IP addresses by fetching them all and computing the average*/
+    // First collect all IP addresses from the database
+    std::vector<std::string> all_ips;
+    for (auto &sku: UniqueSKUs){
+        assetDb.QueryAssets(Assets,sku.first,assetDbManager::ALL, assetDbManager::DONT_PRINT);
+        for(auto &ips: Assets){
+            all_ips.push_back(ips.IP);
+        }
+        Assets.clear();
+    }
+    std::cout << "Total assets found " << all_ips.size() << std::endl;
+    int MaximumIPsQueried = 100;
+    int IPsQueried = 0;
+    start = high_resolution_clock::now();
+    for(auto &ip: all_ips){
+        IPsQueried++;
+        assetDb.QueryAssets(Assets,ip,assetDbManager::DONT_PRINT);
+        Assets.clear();
+        if (IPsQueried > MaximumIPsQueried){ break; }
+    }
+    stop = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(stop - start);
+    std::cout << "PERF: Average time to query " << MaximumIPsQueried << " IP addresses " 
+                << ((float)duration.count() / (float)MaximumIPsQueried) << " microseconds" <<std::endl;
     return 0;
 }
